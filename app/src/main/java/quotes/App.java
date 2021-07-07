@@ -9,20 +9,78 @@ import java.util.Random;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.net.*;
+import com.google.gson.reflect.*;
 
 
 public class App {
     public String getGreeting() {
-        return "Hello World!";
+        return "Hello This is today random quote";
     }
 
     public static void main(String[] args) throws IOException {
         System.out.println(new App().getGreeting());
+        String url = "http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en";
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(4000);
+        connection.setReadTimeout(4000);
+
+        int responseCode= connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK){
+            InputStreamReader stremReader = new InputStreamReader(connection.getInputStream());
+            BufferedReader bufferedReader = new BufferedReader(stremReader);
+            String data = bufferedReader.readLine();
+            bufferedReader.close();
+
+            Gson gson = new Gson();
+            QuoteOnline quote= gson.fromJson(data,QuoteOnline.class);
+            System.out.println("Quote Text-online: ");
+            System.out.println(quote.getQuoteText());
+            System.out.println("By: ");
+            System.out.println(quote.getQuoteAuthor());
+            String [] x = new String[0];
+            Quote newQuote= new Quote(x,quote.getQuoteAuthor(),"",quote.getQuoteText());
+//            System.out.println(newQuote.getText());
+//            System.out.println(gson.toJson(newQuote));
+            // read the json file content and convert it object before add the new one and then write
+            String dataJsonFile = new String(Files.readAllBytes(Paths.get("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes2.json")));
+            List <Quote> AllquotesArray= new ArrayList<>();
+              AllquotesArray  =  gson.fromJson(dataJsonFile,new TypeToken<List<Quote>>() {}.getType());
+             AllquotesArray.add(newQuote);
+            // write on the quote json file
+            BufferedWriter buffer = new BufferedWriter(new FileWriter("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes2.json"));
+
+            buffer.write(gson.toJson(AllquotesArray));
+            buffer.close();
+
+        }else{
+            String data="";
+            data = new String(Files.readAllBytes(Paths.get("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes.json")));
+            Gson gson= new Gson();
+            Quote AllquotesArray [] = gson.fromJson(data,Quote [].class);
+        Random rand = new Random();
+        int randomNum= rand.nextInt(AllquotesArray.length);
+
+        System.out.println("Quote Text: ");
+        System.out.println(AllquotesArray[randomNum].getText());
+        System.out.println("By:");
+        System.out.println(AllquotesArray[randomNum].getAuthor());
+
+        }
+
+
+        /*
+        This is the previous lab solution
+
+         */
 //        File myJsonFile = new File("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes.json");
 //        BufferedReader jsonContent= new BufferedReader(new FileReader(myJsonFile));
-        String data="";
-        data = new String(Files.readAllBytes(Paths.get("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes.json")));
-        Gson gson= new Gson();
+
+//        String data="";
+//        data = new String(Files.readAllBytes(Paths.get("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes.json")));
+//        Gson gson= new Gson();
         /*
         solution with change the Quote type
         ArrayList <Quote> AllquotesArray = new ArrayList<Quote>();
@@ -31,13 +89,13 @@ public class App {
 
          */
 
-        Quote AllquotesArray [] = gson.fromJson(data,Quote [].class);
-        Random rand = new Random();
-        int randomNum= rand.nextInt(AllquotesArray.length);
-
-        System.out.println(randomNum);
-        System.out.println(AllquotesArray[randomNum].getText());
-        System.out.println(AllquotesArray[randomNum].getAuthor());
+//        Quote AllquotesArray [] = gson.fromJson(data,Quote [].class);
+//        Random rand = new Random();
+//        int randomNum= rand.nextInt(AllquotesArray.length);
+//
+//        System.out.println(randomNum);
+//        System.out.println(AllquotesArray[randomNum].getText());
+//        System.out.println(AllquotesArray[randomNum].getAuthor());
 
 
 
