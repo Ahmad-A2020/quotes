@@ -4,14 +4,19 @@
 package quotes;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,7 +44,7 @@ class AppTest {
     }
 
     @Test
-    public void QuoteAuthorTest() throws IOException {
+    public static void QuoteAuthorTest() throws IOException {
         String data="";
         data = new String(Files.readAllBytes(Paths.get("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes.json")));
         Gson gson= new Gson();
@@ -47,4 +52,56 @@ class AppTest {
         assertEquals("Conan O'Brien", AllquotesArray[51].getAuthor());
     }
 
+    public static String quoteOnlineTest() throws IOException {
+        System.out.println(new App().getGreeting());
+        String url = "http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en";
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(4000);
+        connection.setReadTimeout(4000);
+
+        int responseCode= connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            InputStreamReader stremReader = new InputStreamReader(connection.getInputStream());
+            BufferedReader bufferedReader = new BufferedReader(stremReader);
+            String data = bufferedReader.readLine();
+            bufferedReader.close();
+
+            Gson gson = new Gson();
+            QuoteOnline quote = gson.fromJson(data, QuoteOnline.class);
+            System.out.println("Quote Text-online: ");
+            System.out.println(quote.getQuoteText());
+            System.out.println("By: ");
+            System.out.println(quote.getQuoteAuthor());
+            String[] x = new String[0];
+            Quote newQuote = new Quote(x, quote.getQuoteAuthor(), "", quote.getQuoteText());
+//            System.out.println(newQuote.getText());
+//            System.out.println(gson.toJson(newQuote));
+            // read the json file content and convert it object before add the new one and then write
+            String dataJsonFile = new String(Files.readAllBytes(Paths.get("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes2.json")));
+            List<Quote> AllquotesArray = new ArrayList<>();
+            AllquotesArray = gson.fromJson(dataJsonFile, new TypeToken<List<Quote>>() {
+            }.getType());
+            AllquotesArray.add(newQuote);
+            // write on the quote json file
+            BufferedWriter buffer = new BufferedWriter(new FileWriter("C:\\Users\\Ahmad\\asac\\401Course\\quotes\\app\\src\\main\\resources\\recentquotes2.json"));
+
+            buffer.write(gson.toJson(AllquotesArray));
+            buffer.close();
+            return quote.getQuoteText();
+        }else{
+            return null;
+        }
+    }
+    @Test
+    public void hitApiTest() {
+
+        try {
+            assertNotNull(quoteOnlineTest());
+        } catch (IOException e) {
+            System.out.println("there is error");
+        }
+
+    }
 }
